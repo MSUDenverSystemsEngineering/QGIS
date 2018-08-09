@@ -1,6 +1,11 @@
 ﻿<#
 .SYNOPSIS
 	This script performs the installation or uninstallation of an application(s).
+	# LICENSE #
+	PowerShell App Deployment Toolkit - Provides a set of functions to perform common application deployment tasks on Windows.
+	Copyright (C) 2017 - Sean Lillis, Dan Cunningham, Muhammad Mashwani, Aman Motazedian.
+	This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+	You should have received a copy of the GNU Lesser General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
 .DESCRIPTION
 	The script is provided as a template to perform an install or uninstall of an application(s).
 	The script either performs an "Install" deployment type or an "Uninstall" deployment type.
@@ -33,6 +38,8 @@
 	http://psappdeploytoolkit.com
 #>
 [CmdletBinding()]
+## Suppress PSScriptAnalyzer errors for not using declared variables during Appveyor build
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "", Justification="Suppresses Appveyor errors on informational variables below")]
 Param (
 	[Parameter(Mandatory=$false)]
 	[ValidateSet('Install','Uninstall')]
@@ -50,21 +57,21 @@ Param (
 
 Try {
 	## Set the script execution policy for this process
-	Try { Set-ExecutionPolicy -ExecutionPolicy 'ByPass' -Scope 'Process' -Force -ErrorAction 'Stop' } Catch {}
+	Try { Set-ExecutionPolicy -ExecutionPolicy 'ByPass' -Scope 'Process' -Force -ErrorAction 'Stop' } Catch { Write-Error "Failed to set the execution policy to Bypass for this process." }
 
 	##*===============================================
 	##* VARIABLE DECLARATION
 	##*===============================================
 	## Variables: Application
-	[string]$appVendor = ''
+	[string]$appVendor = 'QGIS'
 	[string]$appName = 'QGIS'
-	[string]$appVersion = '2.18.3'
+	[string]$appVersion = '3.2.1'
 	[string]$appArch = 'x64'
 	[string]$appLang = 'EN'
 	[string]$appRevision = '01'
-	[string]$appScriptVersion = '1.0.0'
-	[string]$appScriptDate = '01/30/2017'
-	[string]$appScriptAuthor = 'Jordan Hamilton'
+	[string]$appScriptVersion = '3.7.0.1'
+	[string]$appScriptDate = '08/09/2018'
+	[string]$appScriptAuthor = 'Steve Patterson'
 	##*===============================================
 	## Variables: Install Titles (Only set here to override defaults set by the toolkit)
 	[string]$installName = ''
@@ -78,8 +85,8 @@ Try {
 
 	## Variables: Script
 	[string]$deployAppScriptFriendlyName = 'Deploy Application'
-	[version]$deployAppScriptVersion = [version]'3.6.8'
-	[string]$deployAppScriptDate = '02/06/2016'
+	[version]$deployAppScriptVersion = [version]'3.7.0'
+	[string]$deployAppScriptDate = '02/13/2018'
 	[hashtable]$deployAppScriptParameters = $psBoundParameters
 
 	## Variables: Environment
@@ -111,14 +118,20 @@ Try {
 		##*===============================================
 		[string]$installPhase = 'Pre-Installation'
 
-		## Show Welcome Message, close QGIS applications, verify there is enough disk space to complete the install, and persist the prompt
-		Show-InstallationWelcome -CloseApps 'designer,python,qgis-bin,qgis-browser-bin,saga_gui' -CheckDiskSpace -PersistPrompt
+		## Show Welcome Message, close Internet Explorer if needed, verify there is enough disk space to complete the install, and persist the prompt
+		Show-InstallationWelcome -CloseApps 'qgis-bin' -CheckDiskSpace -PersistPrompt
 
 		## Show Progress Message (with the default message)
 		Show-InstallationProgress
 
 		## <Perform Pre-Installation tasks here>
-
+		If (Test-Path -LiteralPath (Join-Path -Path $envSystemDrive -ChildPath "$envProgramFiles\QGIS 3.0\uninstall.exe") -PathType 'Leaf') {
+			Write-Log -Message 'QGIS will be uninstalled.' -Source $deployAppScriptFriendlyName
+			Remove-File -Path "$envCommonDesktop\GRASS GIS 7.4.0.lnk"
+			Remove-Item "$envCommonDesktop\QGIS 3.0" -Force -Recurse
+			$exitCode = Execute-Process -Path "$envProgramFiles\QGIS 3.0\uninstall.exe" -Parameters "/S" -WindowStyle "Hidden" -WaitForMsiExec -PassThru
+			If (($exitCode.ExitCode -ne "0") -and ($mainExitCode -ne "3010")) { $mainExitCode = $exitCode.ExitCode }
+		}
 
 		##*===============================================
 		##* INSTALLATION
@@ -132,7 +145,7 @@ Try {
 		}
 
 		## <Perform Installation tasks here>
-		Execute-Process -Path "QGIS-OSGeo4W-2.18.3-1-Setup-x86_64.exe" -Parameters "/S" -WindowStyle "Hidden" -PassThru
+		Execute-Process -Path "$dirFiles\QGIS-OSGeo4W-3.2.1-1-Setup-x86_64.exe" -Parameters '/S' -WindowStyle 'Hidden'
 
 		##*===============================================
 		##* POST-INSTALLATION
@@ -140,15 +153,11 @@ Try {
 		[string]$installPhase = 'Post-Installation'
 
 		## <Perform Post-Installation tasks here>
-		Remove-File -Path "$envCommonPrograms\QGIS 2.18\Setup.lnk" -ContinueOnError $true
-		Remove-File -Path "$envCommonDesktop\OSGeo4W Shell.lnk" -ContinueOnError $true
-		Remove-File -Path "$envCommonDesktop\GRASS GIS 7.2.0.lnk" -ContinueOnError $true
-		Remove-File -Path "$envCommonDesktop\QGIS 2.18\*" -Recurse -ContinueOnError $true
-		Remove-Folder -Path "$envCommonDesktop\QGIS 2.18" -ContinueOnError $true
-
 
 		## Display a message at the end of the install
-		If (-not $useDefaultMsi) {}
+		If (-not $useDefaultMsi) {
+
+		}
 	}
 	ElseIf ($deploymentType -ieq 'Uninstall')
 	{
@@ -157,8 +166,8 @@ Try {
 		##*===============================================
 		[string]$installPhase = 'Pre-Uninstallation'
 
-		## Show Welcome Message, close QGIS applications with a 60 second countdown before automatically closing
-		Show-InstallationWelcome -CloseApps 'designer,python,qgis-bin,qgis-browser-bin,saga_gui' -CloseAppsCountdown 60
+		## Show Welcome Message, close Internet Explorer with a 60 second countdown before automatically closing
+		Show-InstallationWelcome -CloseApps 'qgis-bin' -CloseAppsCountdown 60
 
 		## Show Progress Message (with the default message)
 		Show-InstallationProgress
@@ -178,7 +187,9 @@ Try {
 		}
 
 		# <Perform Uninstallation tasks here>
-		Execute-Process -Path "${envProgramFiles}\QGIS 2.18\Uninstall-QGIS.exe" -Parameters "/S" -WindowStyle "Hidden" -PassThru
+		Execute-Process -Path "$envProgramFiles\QGIS 3.2\uninstall.exe" -Parameters "/S"
+		Remove-File -Path "$envCommonDesktop\GRASS GIS 7.4.1.lnk"
+		Remove-Item "$envCommonDesktop\QGIS 3.2" -Force -Recurse
 
 		##*===============================================
 		##* POST-UNINSTALLATION
@@ -186,11 +197,8 @@ Try {
 		[string]$installPhase = 'Post-Uninstallation'
 
 		## <Perform Post-Uninstallation tasks here>
-		Remove-File -Path "$envCommonPrograms\QGIS 2.18\*" -ContinueOnError $true
-		Remove-Folder -Path "$envCommonPrograms\QGIS 2.18" -ContinueOnError $true
-		Remove-RegistryKey -Key "HKEY_LOCAL_MACHINE\SOFTWARE\QGIS 2.18" -ContinueOnError $true
-		Remove-RegistryKey -Key "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\QGIS 2.18" -ContinueOnError $true
-		
+
+
 	}
 
 	##*===============================================
@@ -209,10 +217,10 @@ Catch {
 }
 
 # SIG # Begin signature block
-# MIIU4wYJKoZIhvcNAQcCoIIU1DCCFNACAQExDzANBglghkgBZQMEAgEFADB5Bgor
+# MIIZ7wYJKoZIhvcNAQcCoIIZ4DCCGdwCAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCACddDzpadJy4Rw
-# c/ZsP7jNZ2UajFirdTiEYqXCazoy2KCCD4cwggQUMIIC/KADAgECAgsEAAAAAAEv
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCAWKEF3CZRlTdej
+# 6BRyJ5pJzriug8dqka1TrozUUvytGaCCFFwwggQUMIIC/KADAgECAgsEAAAAAAEv
 # TuFS1zANBgkqhkiG9w0BAQUFADBXMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xv
 # YmFsU2lnbiBudi1zYTEQMA4GA1UECxMHUm9vdCBDQTEbMBkGA1UEAxMSR2xvYmFs
 # U2lnbiBSb290IENBMB4XDTExMDQxMzEwMDAwMFoXDTI4MDEyODEyMDAwMFowUjEL
@@ -259,66 +267,93 @@ Catch {
 # MLyrvC1HNt+SIAPoccZY9nUFmjTwC1lagkQ0qoDkL4T2R12WybbKyp23prrkUNPU
 # N7i6IA7Q05IqW8RZu6Ft2zzORJ3BOCqt4429zQl3GhC+ZwoCNmSIubMbJu7nnmDE
 # Rqi8YTNsz065nLlq8J83/rU9T5rTTf/eII5Ol6b9nwm8TcoYdsmwTYVQ8oDSHQb1
-# WAQHsRgwggbIMIIFsKADAgECAhN/AAAAIhO6jvua86/0AAEAAAAiMA0GCSqGSIb3
-# DQEBCwUAMGIxEzARBgoJkiaJk/IsZAEZFgNlZHUxGTAXBgoJkiaJk/IsZAEZFglt
-# c3VkZW52ZXIxFTATBgoJkiaJk/IsZAEZFgV3aW5hZDEZMBcGA1UEAxMQd2luYWQt
-# Vk1XQ0EwMS1DQTAeFw0xNjA1MjcyMTI0MDJaFw0xODA1MjcyMTI0MDJaMIG/MQsw
-# CQYDVQQGEwJVUzERMA8GA1UECBMIQ29sb3JhZG8xDzANBgNVBAcTBkRlbnZlcjEw
-# MC4GA1UEChMnTWV0cm9wb2xpdGFuIFN0YXRlIFVuaXZlcnNpdHkgb2YgRGVudmVy
-# MSgwJgYDVQQLEx9JbmZvcm1hdGlvbiBUZWNobm9sb2d5IFNlcnZpY2VzMTAwLgYD
-# VQQDEydNZXRyb3BvbGl0YW4gU3RhdGUgVW5pdmVyc2l0eSBvZiBEZW52ZXIwggEi
-# MA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCxCPUOmGXq89WCOBso0z5QIApw
-# EosnzQeoI9zP+n8wEb7BEA//+UTmjIZHe3jP0dF6C7EFhx2FcZxs8XQgSH5bnwor
-# rkLMa1FzcP2GlcNE5F+ms1zk5Bp2x2nsMOcx+12h9A6eU+JR3nXfWFwkNfvOAKrj
-# 1mo4BO5TEvx4DtrVBYFli+0JGnALa1Hd7A68nYtG743FPbioQn8EQSnDr+Jjtd8l
-# vujd9I5IQPptiU3inmcoaG+UFz8HKu7QS/mOLpoz/kjbSShxdNF0mcFmowg8WYMu
-# f8f1trOtsmWJ3lpyroKek8Ie9oOnKw3And2dOgqWxVXnfLEhW8b6PElvZc73AgMB
-# AAGjggMXMIIDEzAOBgNVHQ8BAf8EBAMCBaAwEwYDVR0lBAwwCgYIKwYBBQUHAwEw
-# GwYJKwYBBAGCNxUKBA4wDDAKBggrBgEFBQcDAzAdBgNVHQ4EFgQUxu8skV6twX8T
-# i5hj8XjbzTUYeqgwHwYDVR0jBBgwFoAUbmigb8ibDuAf063cjbVhC57XDzQwggEo
-# BgNVHR8EggEfMIIBGzCCARegggEToIIBD4aBxWxkYXA6Ly8vQ049d2luYWQtVk1X
-# Q0EwMS1DQSgxKSxDTj1WTVdDQTAxLENOPUNEUCxDTj1QdWJsaWMlMjBLZXklMjBT
-# ZXJ2aWNlcyxDTj1TZXJ2aWNlcyxDTj1Db25maWd1cmF0aW9uLERDPXdpbmFkLERD
-# PW1zdWRlbnZlcixEQz1lZHU/Y2VydGlmaWNhdGVSZXZvY2F0aW9uTGlzdD9iYXNl
-# P29iamVjdENsYXNzPWNSTERpc3RyaWJ1dGlvblBvaW50hkVodHRwOi8vVk1XQ0Ew
-# MS53aW5hZC5tc3VkZW52ZXIuZWR1L0NlcnRFbnJvbGwvd2luYWQtVk1XQ0EwMS1D
-# QSgxKS5jcmwwggE+BggrBgEFBQcBAQSCATAwggEsMIG6BggrBgEFBQcwAoaBrWxk
-# YXA6Ly8vQ049d2luYWQtVk1XQ0EwMS1DQSxDTj1BSUEsQ049UHVibGljJTIwS2V5
-# JTIwU2VydmljZXMsQ049U2VydmljZXMsQ049Q29uZmlndXJhdGlvbixEQz13aW5h
-# ZCxEQz1tc3VkZW52ZXIsREM9ZWR1P2NBQ2VydGlmaWNhdGU/YmFzZT9vYmplY3RD
-# bGFzcz1jZXJ0aWZpY2F0aW9uQXV0aG9yaXR5MG0GCCsGAQUFBzAChmFodHRwOi8v
-# Vk1XQ0EwMS53aW5hZC5tc3VkZW52ZXIuZWR1L0NlcnRFbnJvbGwvVk1XQ0EwMS53
-# aW5hZC5tc3VkZW52ZXIuZWR1X3dpbmFkLVZNV0NBMDEtQ0EoMSkuY3J0MCEGCSsG
-# AQQBgjcUAgQUHhIAVwBlAGIAUwBlAHIAdgBlAHIwDQYJKoZIhvcNAQELBQADggEB
-# AIpoMvUtE1iFHSbi7X/M9a+JBPpiAQZzEbq70is1mzdosSVTMN7QoWk4WzHCJBpX
-# Oh7cvBrTLf0m4EqJ7OwPY43ZW7MycOjgtk393CaCzr9BiEDjWzJf8r5bDDCodEFm
-# dodj3/el8nV4HapjiGnJKrhg0b3xRjPP4cvjtBltbqO7tngkpDu+m63X68aC3wrt
-# XwJulfsGeTbd0v4hkji9GCTpLT92mkJyJE04SA/thv4F7yNx1W5XCEWswZeGLiR5
-# 9C5AlUm1WrhjAaoyxabDJWfljV//qk+TeoC5CNQ7ZkqdxFBYPc5d2UdkmmiK76D+
-# qaobXtlVJ9wRYfFoOaUb5dQxggSyMIIErgIBATB5MGIxEzARBgoJkiaJk/IsZAEZ
-# FgNlZHUxGTAXBgoJkiaJk/IsZAEZFgltc3VkZW52ZXIxFTATBgoJkiaJk/IsZAEZ
-# FgV3aW5hZDEZMBcGA1UEAxMQd2luYWQtVk1XQ0EwMS1DQQITfwAAACITuo77mvOv
-# 9AABAAAAIjANBglghkgBZQMEAgEFAKBmMBgGCisGAQQBgjcCAQwxCjAIoAKAAKEC
-# gAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwLwYJKoZIhvcNAQkEMSIEINir
-# rElI4Wbd5ejZ4gRDhw3SD1pNeEguc5hdik7uHF/nMA0GCSqGSIb3DQEBAQUABIIB
-# AJf3KppnjyHNbJVP2TElY+wCOPA9+qc+t2Gz99HuNk3PXNyzkolBEkvGsHMYYfjV
-# RHZgSuoHLgVP2bUpjq2rLugTnlWJx7j0EUT40EIV+R+DVxx+oi5wBV7F9CvlDWVU
-# E62NAj2xBu17KZSv0yW3jGhHyLKy20XM85Eqo56b/WoGJiftXA+hZtcu/4HtldEC
-# yMX4nSfhI/4pPoyTqdQWf/heFWcl9EZv4mjmUtZfhAOCZcv/4k7P4O8GJc2WVwoy
-# gvik4fQTCKriexH9pf4VxQk82m1QuqslPRC7zwDOWxKxhhXLBShkUZyCPl6jurXv
-# deUKcuG1jRqmUeh+1G3vHQahggKiMIICngYJKoZIhvcNAQkGMYICjzCCAosCAQEw
-# aDBSMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEoMCYG
-# A1UEAxMfR2xvYmFsU2lnbiBUaW1lc3RhbXBpbmcgQ0EgLSBHMgISESHWmadklz7x
-# +EJ+6RnMU0EUMAkGBSsOAwIaBQCggf0wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEH
-# ATAcBgkqhkiG9w0BCQUxDxcNMTcwMTMwMTk0OTUyWjAjBgkqhkiG9w0BCQQxFgQU
-# Xr20zqNukz1lvtlfAzxWAM+ZlAMwgZ0GCyqGSIb3DQEJEAIMMYGNMIGKMIGHMIGE
-# BBRjuC+rYfWDkJaVBQsAJJxQKTPseTBsMFakVDBSMQswCQYDVQQGEwJCRTEZMBcG
-# A1UEChMQR2xvYmFsU2lnbiBudi1zYTEoMCYGA1UEAxMfR2xvYmFsU2lnbiBUaW1l
-# c3RhbXBpbmcgQ0EgLSBHMgISESHWmadklz7x+EJ+6RnMU0EUMA0GCSqGSIb3DQEB
-# AQUABIIBABEXfQI2nCGr9LhxM36THHiXfDfc+cWjRlSBzfNDWI10HP/1STTwNwuR
-# R1yTYK4Z+y7S4Yw3PneCu3T1I/4iErR3cwv5fzONUfJdta7zAPLxFrI9Fft1U4J5
-# RaqRnQrx3jumyK13oQYY/sKb3v6IBgzncGxwixw99gVLdeg17Cirm5HHKV60BL9b
-# N8nafLnshtBlsbfmY5hjJXYPTy2c1hBu1y5Hp3ONRLgkVT0mAQle5HQpwUJEGbgc
-# G5t+YB/Mq0FrEb7o3SmBoaSmjxd5fOLqn0ls2BuojnokYgoUucKIBpUnQjFlnXwL
-# K5NyaV6xRqrA3Cn3oiHMg5jd3oHARqY=
+# WAQHsRgwggWuMIIElqADAgECAhAHA3HRD3laQHGZK5QHYpviMA0GCSqGSIb3DQEB
+# CwUAMHwxCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJNSTESMBAGA1UEBxMJQW5uIEFy
+# Ym9yMRIwEAYDVQQKEwlJbnRlcm5ldDIxETAPBgNVBAsTCEluQ29tbW9uMSUwIwYD
+# VQQDExxJbkNvbW1vbiBSU0EgQ29kZSBTaWduaW5nIENBMB4XDTE4MDYyMTAwMDAw
+# MFoXDTIxMDYyMDIzNTk1OVowgbkxCzAJBgNVBAYTAlVTMQ4wDAYDVQQRDAU4MDIw
+# NDELMAkGA1UECAwCQ08xDzANBgNVBAcMBkRlbnZlcjEYMBYGA1UECQwPMTIwMSA1
+# dGggU3RyZWV0MTAwLgYDVQQKDCdNZXRyb3BvbGl0YW4gU3RhdGUgVW5pdmVyc2l0
+# eSBvZiBEZW52ZXIxMDAuBgNVBAMMJ01ldHJvcG9saXRhbiBTdGF0ZSBVbml2ZXJz
+# aXR5IG9mIERlbnZlcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMtX
+# iSjEDjYNBIYXsPnFGHwZqvS5lgRNSaQjsyxgLsGI6yLLDCpaYy3CBwN1on4QnYzE
+# QpsHV+TJ/3K61ZvqAxhR6Anw8TjVjaB3kPdtKJjEUlgiXNK0nDRyMVasZyeXALR5
+# STSf1SxoMt8HIDd0KTB8yhME6ezFdFzwB5He2/jyOswfYsN+n4k2Q9UcaVtWgCzW
+# ua39anwNva7M4GugPO5ZkF6XkrGzRHpXctV/Fk6LmqPY6sRm45nScnC1KQ3NN/t6
+# ZBHzmAtgbZa41o5+AvNdkv9TVF6S3ODGpf3qKW8kjFt82LLYdZi0V07ln+S/BtAl
+# GUPOvqem4EkbMtZ5M3MCAwEAAaOCAewwggHoMB8GA1UdIwQYMBaAFK41Ixf//wY9
+# nFDgjCRlMx5wEIiiMB0GA1UdDgQWBBSl6YhuvPlIpfXzOIq+Y/mkDGObDzAOBgNV
+# HQ8BAf8EBAMCB4AwDAYDVR0TAQH/BAIwADATBgNVHSUEDDAKBggrBgEFBQcDAzAR
+# BglghkgBhvhCAQEEBAMCBBAwZgYDVR0gBF8wXTBbBgwrBgEEAa4jAQQDAgEwSzBJ
+# BggrBgEFBQcCARY9aHR0cHM6Ly93d3cuaW5jb21tb24ub3JnL2NlcnQvcmVwb3Np
+# dG9yeS9jcHNfY29kZV9zaWduaW5nLnBkZjBJBgNVHR8EQjBAMD6gPKA6hjhodHRw
+# Oi8vY3JsLmluY29tbW9uLXJzYS5vcmcvSW5Db21tb25SU0FDb2RlU2lnbmluZ0NB
+# LmNybDB+BggrBgEFBQcBAQRyMHAwRAYIKwYBBQUHMAKGOGh0dHA6Ly9jcnQuaW5j
+# b21tb24tcnNhLm9yZy9JbkNvbW1vblJTQUNvZGVTaWduaW5nQ0EuY3J0MCgGCCsG
+# AQUFBzABhhxodHRwOi8vb2NzcC5pbmNvbW1vbi1yc2Eub3JnMC0GA1UdEQQmMCSB
+# Iml0c3N5c3RlbWVuZ2luZWVyaW5nQG1zdWRlbnZlci5lZHUwDQYJKoZIhvcNAQEL
+# BQADggEBAIc2PVq7BamWAujyCQPHsGCDbM3i1OY5nruA/fOtbJ6mJvT9UJY4+61g
+# rcHLzV7op1y0nRhV459TrKfHKO42uRyZpdnHaOoC080cfg/0EwFJRy3bYB0vkVP8
+# TeUkvUhbtcPVofI1P/wh9ZT2iYVCerOOAqivxWqh8Dt+8oSbjSGhPFWyu04b8Ucz
+# bK/97uXdgK0zNcXDJUjMKr6CbevfLQLfQiFPizaej+2fvR/jZHAvxO9W2rhd6Nw6
+# gFs2q3P4CFK0+yAkFCLk+9wsp+RsRvRkvdWJp+anNvAKOyVfCj6sz5dQPAIYIyLh
+# y9ze3taVKm99DQQZV/wN/ATPDftLGm0wggXrMIID06ADAgECAhBl4eLj1d5QRYXz
+# JiSABeLUMA0GCSqGSIb3DQEBDQUAMIGIMQswCQYDVQQGEwJVUzETMBEGA1UECBMK
+# TmV3IEplcnNleTEUMBIGA1UEBxMLSmVyc2V5IENpdHkxHjAcBgNVBAoTFVRoZSBV
+# U0VSVFJVU1QgTmV0d29yazEuMCwGA1UEAxMlVVNFUlRydXN0IFJTQSBDZXJ0aWZp
+# Y2F0aW9uIEF1dGhvcml0eTAeFw0xNDA5MTkwMDAwMDBaFw0yNDA5MTgyMzU5NTla
+# MHwxCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJNSTESMBAGA1UEBxMJQW5uIEFyYm9y
+# MRIwEAYDVQQKEwlJbnRlcm5ldDIxETAPBgNVBAsTCEluQ29tbW9uMSUwIwYDVQQD
+# ExxJbkNvbW1vbiBSU0EgQ29kZSBTaWduaW5nIENBMIIBIjANBgkqhkiG9w0BAQEF
+# AAOCAQ8AMIIBCgKCAQEAwKAvix56u2p1rPg+3KO6OSLK86N25L99MCfmutOYMlYj
+# XAaGlw2A6O2igTXrC/Zefqk+aHP9ndRnec6q6mi3GdscdjpZh11emcehsriphHMM
+# zKuHRhxqx+85Jb6n3dosNXA2HSIuIDvd4xwOPzSf5X3+VYBbBnyCV4RV8zj78gw2
+# qblessWBRyN9EoGgwAEoPgP5OJejrQLyAmj91QGr9dVRTVDTFyJG5XMY4DrkN3dR
+# yJ59UopPgNwmucBMyvxR+hAJEXpXKnPE4CEqbMJUvRw+g/hbqSzx+tt4z9mJmm2j
+# /w2nP35MViPWCb7hpR2LB8W/499Yqu+kr4LLBfgKCQIDAQABo4IBWjCCAVYwHwYD
+# VR0jBBgwFoAUU3m/WqorSs9UgOHYm8Cd8rIDZsswHQYDVR0OBBYEFK41Ixf//wY9
+# nFDgjCRlMx5wEIiiMA4GA1UdDwEB/wQEAwIBhjASBgNVHRMBAf8ECDAGAQH/AgEA
+# MBMGA1UdJQQMMAoGCCsGAQUFBwMDMBEGA1UdIAQKMAgwBgYEVR0gADBQBgNVHR8E
+# STBHMEWgQ6BBhj9odHRwOi8vY3JsLnVzZXJ0cnVzdC5jb20vVVNFUlRydXN0UlNB
+# Q2VydGlmaWNhdGlvbkF1dGhvcml0eS5jcmwwdgYIKwYBBQUHAQEEajBoMD8GCCsG
+# AQUFBzAChjNodHRwOi8vY3J0LnVzZXJ0cnVzdC5jb20vVVNFUlRydXN0UlNBQWRk
+# VHJ1c3RDQS5jcnQwJQYIKwYBBQUHMAGGGWh0dHA6Ly9vY3NwLnVzZXJ0cnVzdC5j
+# b20wDQYJKoZIhvcNAQENBQADggIBAEYstn9qTiVmvZxqpqrQnr0Prk41/PA4J8HH
+# nQTJgjTbhuET98GWjTBEE9I17Xn3V1yTphJXbat5l8EmZN/JXMvDNqJtkyOh26ow
+# AmvquMCF1pKiQWyuDDllxR9MECp6xF4wnH1Mcs4WeLOrQPy+C5kWE5gg/7K6c9G1
+# VNwLkl/po9ORPljxKKeFhPg9+Ti3JzHIxW7LdyljffccWiuNFR51/BJHAZIqUDw3
+# LsrdYWzgg4x06tgMvOEf0nITelpFTxqVvMtJhnOfZbpdXZQ5o1TspxfTEVOQAsp0
+# 5HUNCXyhznlVLr0JaNkM7edgk59zmdTbSGdMq8Ztuu6VyrivOlMSPWmay5MjvwTz
+# uNorbwBv0DL+7cyZBp7NYZou+DoGd1lFZN0jU5IsQKgm3+00pnnJ67crdFwfz/8b
+# q3MhTiKOWEb04FT3OZVp+jzvaChHWLQ8gbCORgClaZq1H3aqI7JeRkWEEEp6Tv4W
+# AVsr/i7LoXU72gOb8CAzPFqwI4Excdrxp0I4OXbECHlDqU4sTInqwlMwofmxeO4u
+# 94196qIqJQl+8Sykl06VktqMux84Iw3ZQLH08J8LaJ+WDUycc4OjY61I7FGxCDkb
+# SQf3npXeRFm0IBn8GiW+TRDk6J2XJFLWEtVZmhboFlBLoUlqHUCKu0QOhU/+AEOq
+# nY98j2zRMYIE6TCCBOUCAQEwgZAwfDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAk1J
+# MRIwEAYDVQQHEwlBbm4gQXJib3IxEjAQBgNVBAoTCUludGVybmV0MjERMA8GA1UE
+# CxMISW5Db21tb24xJTAjBgNVBAMTHEluQ29tbW9uIFJTQSBDb2RlIFNpZ25pbmcg
+# Q0ECEAcDcdEPeVpAcZkrlAdim+IwDQYJYIZIAWUDBAIBBQCggYQwGAYKKwYBBAGC
+# NwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYKKwYBBAGCNwIBBDAcBgor
+# BgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAvBgkqhkiG9w0BCQQxIgQgHfHJGN2u
+# WVKIV95uya6cmerJh4+0Qqj9eHoNBaLwdBUwDQYJKoZIhvcNAQEBBQAEggEAM5S+
+# e1dVQw8GcD0gtF+hTEYqWgLgQaBYgxtmrrULL4o+UGhwWeeU/BKbUNdsFZUByN7e
+# VCat3qTFgkgZ+kDlbPtOOanH5wXzUQXXj8JIiIJkMYJBjLmuzd55hMDQ/eQLEAq0
+# jabSku6JOcFToYwsW78xgywRzYWJc3nG+MZgYHl0OTEGaj+AY1syD82T2YrP5EpD
+# 4CfVUem6hG/xXaqXPOryekUdMtIOxgkfpWeEJajRd8l/ewaw4ujL7aTnpJ2V9Vlb
+# qF3lByRZZOx6OCNwd8iRouwUt0H8gql4ELnXgoylcLOcW74p04P4TY014Ej6ByEm
+# 6My/rnVnS2zg003S8aGCAqIwggKeBgkqhkiG9w0BCQYxggKPMIICiwIBATBoMFIx
+# CzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMSgwJgYDVQQD
+# Ex9HbG9iYWxTaWduIFRpbWVzdGFtcGluZyBDQSAtIEcyAhIRIdaZp2SXPvH4Qn7p
+# GcxTQRQwCQYFKw4DAhoFAKCB/TAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwG
+# CSqGSIb3DQEJBTEPFw0xODA4MDkxNDI1MTJaMCMGCSqGSIb3DQEJBDEWBBRrC8aA
+# WbDVK++Pq7gT+AYk4CSZTDCBnQYLKoZIhvcNAQkQAgwxgY0wgYowgYcwgYQEFGO4
+# L6th9YOQlpUFCwAknFApM+x5MGwwVqRUMFIxCzAJBgNVBAYTAkJFMRkwFwYDVQQK
+# ExBHbG9iYWxTaWduIG52LXNhMSgwJgYDVQQDEx9HbG9iYWxTaWduIFRpbWVzdGFt
+# cGluZyBDQSAtIEcyAhIRIdaZp2SXPvH4Qn7pGcxTQRQwDQYJKoZIhvcNAQEBBQAE
+# ggEAYwDfrRLRUturleAIK7lphx+NsWSTepIOQ2qO8l9rRk3Neiau0GzEv67DJbzd
+# tdlbrvRec472faW7naAas7q0zqZxqeE4McnUXPmWDGQv5rZStwA2rf8d6rH1uTj4
+# mZGG8rI7XVDgHYQWtx7OmXLqEvw0BfW4/4HylLmtxbSLWwtch9nfifVWTWD4lqWO
+# tNjq0MtPryke99x20Z/sMgXgD5nNI3Ii5xtc+BY9YGWAQSYgzj+nJJoJybPM+6Nv
+# k5Lz7GYTdeUgt74HSpuSOCLnvPCUdXg5A56oA74BKcIeN/7MFqSDSVu3AzDioTlI
+# 2VsrC0gtCBARWO8b1OVkytD1PA==
 # SIG # End signature block

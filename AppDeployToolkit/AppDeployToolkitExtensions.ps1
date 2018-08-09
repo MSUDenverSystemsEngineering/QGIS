@@ -1,6 +1,11 @@
 ﻿<#
 .SYNOPSIS
 	This script is a template that allows you to extend the toolkit with your own custom functions.
+    # LICENSE #
+    PowerShell App Deployment Toolkit - Provides a set of functions to perform common application deployment tasks on Windows. 
+    Copyright (C) 2017 - Sean Lillis, Dan Cunningham, Muhammad Mashwani, Aman Motazedian.
+    This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. 
+    You should have received a copy of the GNU Lesser General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
 .DESCRIPTION
 	The script is automatically dot-sourced by the AppDeployToolkitMain.ps1 script.
 .NOTES
@@ -23,7 +28,7 @@ Param (
 [string]$appDeployToolkitExtName = 'PSAppDeployToolkitExt'
 [string]$appDeployExtScriptFriendlyName = 'App Deploy Toolkit Extensions'
 [version]$appDeployExtScriptVersion = [version]'1.5.0'
-[string]$appDeployExtScriptDate = '06/11/2015'
+[string]$appDeployExtScriptDate = '02/12/2017'
 [hashtable]$appDeployExtScriptParameters = $PSBoundParameters
 
 ##*===============================================
@@ -53,8 +58,8 @@ Else {
 # SIG # Begin signature block
 # MIIU4wYJKoZIhvcNAQcCoIIU1DCCFNACAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDyh1i/3e9aJ/tv
-# RNSU+h9H851QIDAQ4r0tbnJdlf72fKCCD4cwggQUMIIC/KADAgECAgsEAAAAAAEv
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDCvKAwWIPjyjwR
+# M4lJg7dqZ6NT9qtI4ErSKnWnW5LwJaCCD4cwggQUMIIC/KADAgECAgsEAAAAAAEv
 # TuFS1zANBgkqhkiG9w0BAQUFADBXMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xv
 # YmFsU2lnbiBudi1zYTEQMA4GA1UECxMHUm9vdCBDQTEbMBkGA1UEAxMSR2xvYmFs
 # U2lnbiBSb290IENBMB4XDTExMDQxMzEwMDAwMFoXDTI4MDEyODEyMDAwMFowUjEL
@@ -141,26 +146,26 @@ Else {
 # FgNlZHUxGTAXBgoJkiaJk/IsZAEZFgltc3VkZW52ZXIxFTATBgoJkiaJk/IsZAEZ
 # FgV3aW5hZDEZMBcGA1UEAxMQd2luYWQtVk1XQ0EwMS1DQQITfwAAACITuo77mvOv
 # 9AABAAAAIjANBglghkgBZQMEAgEFAKBmMBgGCisGAQQBgjcCAQwxCjAIoAKAAKEC
-# gAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwLwYJKoZIhvcNAQkEMSIEIGre
-# 6M1v8oP6fCHkdjkq0hHc1yczQLfmnCuGVqeUAJ3dMA0GCSqGSIb3DQEBAQUABIIB
-# AFLwvNcV10mgh+rao7YL3KifUus7qwnfvOj4FdStCYGunqcIZIyPWUtW3Y9XTrZz
-# CwOAaTCt/a5cC3M4ZjVjo/RDqYrOsXUAyVjp6zLoQH/K7ujdoG9dCSam859s/gxw
-# sPqGSS/G6kCKlTXlPMk8anxfT9gruCXOrQauHM3ikU3JexsSlDBRUnNQfm3mxlie
-# s0ofNvYEeyHE9Ozi+AzAtpT6S61zKtu7Mma8QuFvcC5JSZ2riUmpQ5JrKq6Apeeu
-# WuFlazAg82RuKalfXZBX/3Wrn/3JrWX47vmriy7qJhDAqdmXRRcCJMslj5yOB4A3
-# P5TQbcXZGOos9/ahaA3/xGqhggKiMIICngYJKoZIhvcNAQkGMYICjzCCAosCAQEw
+# gAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwLwYJKoZIhvcNAQkEMSIEINwk
+# 5l0/xIsS6E3vmHx3ArK2GTSwDUxFABl9Z6xk3R7nMA0GCSqGSIb3DQEBAQUABIIB
+# AFE2Xqu4VRwQrXNGlg1lBNP9R0HI1vNjmjuJdAbhBHJiDs3XyYCBjsRuGG/YARnl
+# C8k80z+s4czvdpBLNBYnc4/SURE6NTd0IfZX/Kb1CddfmmdJcyJLf4awg/mo9N5u
+# CjCmkL4TobYrbt7OIpEzRuij139IZdRb6AdVbkqsYd7v8GYUk5cY3AfwVQ08Qr2F
+# /ZElvbuN6xD5uaUXcIVdQzYT9sR0+AjiU5OG+spkmwmojStonhJwYiKO5izWLNBe
+# dhfUwZd3nrsqFQP5tdFQ/RB75FSWMEH4qGIa/BEWU347m5dXYDCoj9zg7Dth3DUi
+# xFefqoCorFhouj2qpZDXqDWhggKiMIICngYJKoZIhvcNAQkGMYICjzCCAosCAQEw
 # aDBSMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEoMCYG
 # A1UEAxMfR2xvYmFsU2lnbiBUaW1lc3RhbXBpbmcgQ0EgLSBHMgISESHWmadklz7x
 # +EJ+6RnMU0EUMAkGBSsOAwIaBQCggf0wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEH
-# ATAcBgkqhkiG9w0BCQUxDxcNMTYwODE1MTgzOTM4WjAjBgkqhkiG9w0BCQQxFgQU
-# 6hR9F9xLJAPiSlY5qxO1bvPbr/EwgZ0GCyqGSIb3DQEJEAIMMYGNMIGKMIGHMIGE
+# ATAcBgkqhkiG9w0BCQUxDxcNMTgwMzA2MDAwMzEzWjAjBgkqhkiG9w0BCQQxFgQU
+# /DGXU5Y9lcf6T+9nEab5V9rkGhswgZ0GCyqGSIb3DQEJEAIMMYGNMIGKMIGHMIGE
 # BBRjuC+rYfWDkJaVBQsAJJxQKTPseTBsMFakVDBSMQswCQYDVQQGEwJCRTEZMBcG
 # A1UEChMQR2xvYmFsU2lnbiBudi1zYTEoMCYGA1UEAxMfR2xvYmFsU2lnbiBUaW1l
 # c3RhbXBpbmcgQ0EgLSBHMgISESHWmadklz7x+EJ+6RnMU0EUMA0GCSqGSIb3DQEB
-# AQUABIIBAGtiXcmJgD1ojwpzH7R0bLESSQXb7TLGQATjArUtStUbhhTIsRFfL5YQ
-# tL8QYnJWXXeNq+PdLwUabhDMBfr8NBy+uWa9RF/tA5tn9cYcTwFeuN33No/SXIHw
-# sgklti37pbCFPo82dDuaBAiIznaQjVwi7+6RdUiZM/sl8/oNDmTaJKuBoKC/x5aF
-# 3K3XV5ZhRCBK3wIomjq5J6jkxDtclh663mol1zJVzGnSWzxvbRQnWoZ4yANhk4ps
-# mfYsdGCWzrf54y1fN/mpNHFk8oYfa6hovjiAdY8OA/8eCZPnJEXKzhH94Cd2qCJr
-# eul+mYdwXzDwHxUMHt3XI6VeyOZ+JHo=
+# AQUABIIBAIeuwzDwyEtZYSCaIc0vFG5iqaehdLUnZcee+cnngspgvu72bEWxQqZk
+# RmQCxUsqwf2FVwx8we4DJQoprFW7zI5erBL2y1J3QUJ0HF63km+ZGeYFLVeyrFSp
+# L9m66LZm1IVn5h+6kTzpJ9IwiEwsnxTbvt8hfYEsKMYGMqmhzsxx5uHesKZlEGRg
+# j/AWE4rLEgQN3hP3sKf4aqzCvERb+jIoqRvFW+No4nuBeiMZRec0mWIfnVuvScJ0
+# vKl5Fss9Cm9G7ECoe7y/z5ta6EFlo4OH/tA0vUl1Gf54pEA6oVxK4FyBQ5GVhly0
+# 8WVBJI0FFDAwJM3SgbFiizzZ8d8JsVU=
 # SIG # End signature block

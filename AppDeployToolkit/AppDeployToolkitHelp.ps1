@@ -1,6 +1,11 @@
 ﻿<#
 .SYNOPSIS
 	Displays a graphical console to browse the help for the App Deployment Toolkit functions
+    # LICENSE #
+    PowerShell App Deployment Toolkit - Provides a set of functions to perform common application deployment tasks on Windows. 
+    Copyright (C) 2017 - Sean Lillis, Dan Cunningham, Muhammad Mashwani, Aman Motazedian.
+    This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. 
+    You should have received a copy of the GNU Lesser General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
 .DESCRIPTION
 	Displays a graphical console to browse the help for the App Deployment Toolkit functions
 .EXAMPLE
@@ -18,7 +23,7 @@
 [string]$appDeployToolkitHelpName = 'PSAppDeployToolkitHelp'
 [string]$appDeployHelpScriptFriendlyName = 'App Deploy Toolkit Help'
 [version]$appDeployHelpScriptVersion = [version]'3.6.5'
-[string]$appDeployHelpScriptDate = '08/17/2015'
+[string]$appDeployHelpScriptDate = '02/12/2017'
 
 ## Variables: Environment
 [string]$scriptDirectory = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
@@ -74,7 +79,7 @@ Function Show-HelpConsole {
 	$HelpListBox.Size = $System_Drawing_Size
 	$HelpListBox.Sorted = $true
 	$HelpListBox.TabIndex = 2
-	$HelpListBox.add_SelectedIndexChanged({ $HelpTextBox.Text = Get-Help -Name $HelpListBox.SelectedItem -Detailed | Out-String })
+	$HelpListBox.add_SelectedIndexChanged({ $HelpTextBox.Text = Get-Help -Name $HelpListBox.SelectedItem -Full | Out-String })
 	$helpFunctions = Get-Command -CommandType 'Function' | Where-Object { ($_.HelpUri -match 'psappdeploytoolkit') -and ($_.Definition -notmatch 'internal script function') } | Select-Object -ExpandProperty Name
 	ForEach ($helpFunction in $helpFunctions) {
 		$null = $HelpListBox.Items.Add($helpFunction)
@@ -128,8 +133,8 @@ Write-Log -Message "[$appDeployHelpScriptFriendlyName] console closed." -Source 
 # SIG # Begin signature block
 # MIIU4wYJKoZIhvcNAQcCoIIU1DCCFNACAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCCo/ycmMiqFwpst
-# XnK1zSoTI0xDvn8izPU/XNinYmF1G6CCD4cwggQUMIIC/KADAgECAgsEAAAAAAEv
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCCEhLLxn4J4+GqO
+# /cnHSFL/ZRYhK6NlawoAKjV8xFMpYqCCD4cwggQUMIIC/KADAgECAgsEAAAAAAEv
 # TuFS1zANBgkqhkiG9w0BAQUFADBXMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xv
 # YmFsU2lnbiBudi1zYTEQMA4GA1UECxMHUm9vdCBDQTEbMBkGA1UEAxMSR2xvYmFs
 # U2lnbiBSb290IENBMB4XDTExMDQxMzEwMDAwMFoXDTI4MDEyODEyMDAwMFowUjEL
@@ -216,26 +221,26 @@ Write-Log -Message "[$appDeployHelpScriptFriendlyName] console closed." -Source 
 # FgNlZHUxGTAXBgoJkiaJk/IsZAEZFgltc3VkZW52ZXIxFTATBgoJkiaJk/IsZAEZ
 # FgV3aW5hZDEZMBcGA1UEAxMQd2luYWQtVk1XQ0EwMS1DQQITfwAAACITuo77mvOv
 # 9AABAAAAIjANBglghkgBZQMEAgEFAKBmMBgGCisGAQQBgjcCAQwxCjAIoAKAAKEC
-# gAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwLwYJKoZIhvcNAQkEMSIEIO9o
-# HxiVJGLyHPO5uMrAfFm4H1LbQ8yi7GCu+6cQZ/KYMA0GCSqGSIb3DQEBAQUABIIB
-# AAcxtT7SO24K4payo6nzDncKzGocRjyns5v6jNCWR3wAVuJlttOmSHSxhmkmA9/j
-# 7e8T6jZh6UybRvwcV3ldfvFPCfmfb85Y23rAeYA3WVRYU1QTqUtoqEfKBWzf1+33
-# PZwrJ9LZ7xIzEwN2UTEfBoAdBP0vNjNTNsVp7jtGiiZOLhrSe//jpL1q0u6eoiWl
-# V1/xcm31ZTu7Gq42ZhYDOF2VTedV9Cg1q4SnVk8BoFEvweH9J20OT+0/aCSN/owU
-# CAM9N8h3ZU9vBWOW1nVkLOIkXr+Ca4KiMSsBvDzbPj8SsNAfG3kHuZi/AIeLWWnJ
-# 4ObvBbZmKXHZ1rUe5sRj1VehggKiMIICngYJKoZIhvcNAQkGMYICjzCCAosCAQEw
+# gAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwLwYJKoZIhvcNAQkEMSIEIOlq
+# rAScjMDnliRqvf/99vAZYFJSiL7mOftVhV1pID6AMA0GCSqGSIb3DQEBAQUABIIB
+# ABBKAoF0UXzLmS3A8Jclx/DS8MrrQGHHWva6gRkkglwjLwuMJDbAVkKpSCTSNGsD
+# 1viw++WkfJLXMDrWD0rdwAWsjYWLAB43Ya49hHhX72cH3yRKnlZhwQTk9BUEYAxB
+# DSuZP6Td0Ds1yIhwO88BDsxzIopKydsB/+hG6OFZnhYZVPdn6HesjFlUO7C1+NNM
+# +/UCHhfUHGDZMC6aihMhk3XBE3LKeSZdhP8wxyYWtQiXvjY4NrykgA7qr1xXm2An
+# xO8+ZNMIYBLoqS3B/9PXcfdszh38Gll6XD53Hu+Eh3P1Ybb4rW+xLgpsCTn/dKtb
+# dNp8mutM3iaZVPygph4XbjmhggKiMIICngYJKoZIhvcNAQkGMYICjzCCAosCAQEw
 # aDBSMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEoMCYG
 # A1UEAxMfR2xvYmFsU2lnbiBUaW1lc3RhbXBpbmcgQ0EgLSBHMgISESHWmadklz7x
 # +EJ+6RnMU0EUMAkGBSsOAwIaBQCggf0wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEH
-# ATAcBgkqhkiG9w0BCQUxDxcNMTYwODE1MTgzOTQ0WjAjBgkqhkiG9w0BCQQxFgQU
-# //VGy0Pk+B2/aH6LWnm65MnpB7YwgZ0GCyqGSIb3DQEJEAIMMYGNMIGKMIGHMIGE
+# ATAcBgkqhkiG9w0BCQUxDxcNMTgwMzA2MDAwMzA0WjAjBgkqhkiG9w0BCQQxFgQU
+# 7D142Hmn7HEJ0uSwJ5YIuY3l91IwgZ0GCyqGSIb3DQEJEAIMMYGNMIGKMIGHMIGE
 # BBRjuC+rYfWDkJaVBQsAJJxQKTPseTBsMFakVDBSMQswCQYDVQQGEwJCRTEZMBcG
 # A1UEChMQR2xvYmFsU2lnbiBudi1zYTEoMCYGA1UEAxMfR2xvYmFsU2lnbiBUaW1l
 # c3RhbXBpbmcgQ0EgLSBHMgISESHWmadklz7x+EJ+6RnMU0EUMA0GCSqGSIb3DQEB
-# AQUABIIBAFmgtEajsijanrJYIus/WpVEnWapZbiJsx84DlRpeR+wCzGFmfmBmSrr
-# hEVZJEkRVL0en/FcC1Qu2nU7TDFxzdjxwR1aRITns8Y4am0zxE9lGKC0pcgA8QkA
-# xcnhCdsFxEy3sfrS2mpmqpMVXqWJPMI0kfiAoGZ/hYNxm1k+soNaEQP08jdXetC5
-# DhOJiqss2rLDaRU+gofswJWVvXVGP1ransXO3nzxEmxSUav45uwyislCytHpxp59
-# 8sXZCe53w9F6uz05ARUoo1uVP0EjUpoPKE76APCUHlcr4Tx3G018a2xg3MRq/M0m
-# xa3B+f2c7XIrqakbLcEztCxmZNv3MuM=
+# AQUABIIBAG83YVedZQ1D03ugwOfxn/i46Moq08tLEr0y7rxKhM7pLp8y/C2ZO6ch
+# 6TIqNxTuxid4AX+BP4uIeJggeOyCv22uceXgXtat3+jUhh6CljjpGtFfwNQwnsFU
+# kmnR6VveuXSyBGTLlBtVcAnavYDwIjQGkQ/poZGJxoxtQXuC/8E1ATAcxm/H7tRM
+# ruqfXx8ghGCZbdSlQ+91YzsrV0oDLhoec44RXNnB26ZBvcq3Cfo0pPLX74aweMFJ
+# wLFlcUa7jTeMxNZ5ivuMsalqL+gnrBol/PDgDbPyArzfLQuy1nRoA01eI39ybgON
+# 1BMenV5u+Hw/eKOGw24+h1k4RmXf+Yg=
 # SIG # End signature block
